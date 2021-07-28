@@ -1,0 +1,3 @@
+[submodule "PopMp4Detective.js/PopEngineCommon"]
+	path = PopMp4Detective.js/PopEngineCommon
+	url = https://github.com/NewChromantics/PopEngineCommon.git
