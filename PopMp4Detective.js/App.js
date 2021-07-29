@@ -31,6 +31,7 @@ function PushMp4Samples(Samples)
 		Row.PresentationTimeMs = Sample.PresentationTimeMs;
 		Row.ContentSize = Sample.DataSize;
 		Row.Keyframe = Sample.IsKeyframe ? 'Keyframe' : '';
+		Row.FilePosition = Sample.FilePosition || Sample.DataFilePosition || Sample.DataPosition;
 		return Row;
 	}
 
