@@ -30,6 +30,7 @@ function ClearMp4Sections()
 export async function LoadMp4(Filename)
 {
 	const Mp4 = new Mp4Decoder();
+	ClearMp4Sections();
 	
 	//	async callback for new data
 	async function ReadDecodedThread()
@@ -70,7 +71,8 @@ async function DragAndDropThread(DropTargetElement)
 {
 	while(DropTargetElement)
 	{
-		const DroppedFile = await DropTargetElement.WaitForDragDrop();
-		Pop.Debug(`Dropped File; ${DroppedFile}`);
+		const DroppedFilename = await DropTargetElement.WaitForDragDrop();
+		Pop.Debug(`Dropped File; ${DroppedFilename}`);
+		await LoadMp4(DroppedFilename);
 	}
 }
