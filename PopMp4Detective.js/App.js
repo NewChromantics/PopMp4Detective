@@ -11,6 +11,7 @@ function PushMp4Atoms(Atoms)
 	{
 		const Row = {};
 		Row.Fourcc = Atom.Fourcc;
+		Row.FilePosition = Atom.FilePosition;
 		Row.HeaderSize = Atom.HeaderSize;
 		Row.ContentSize = Atom.ContentSize;
 		return Row;
@@ -28,7 +29,8 @@ function PushMp4Samples(Samples)
 		const Row = {};
 		Row.DecodeTimeMs = Sample.DecodeTimeMs;
 		Row.PresentationTimeMs = Sample.PresentationTimeMs;
-		Row.DataSize = Sample.DataSize;
+		Row.ContentSize = Sample.DataSize;
+		Row.Keyframe = Sample.IsKeyframe ? 'Keyframe' : '';
 		return Row;
 	}
 
