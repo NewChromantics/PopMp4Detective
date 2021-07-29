@@ -5,9 +5,9 @@ import {Mp4Decoder} from './PopEngineCommon/Mp4.js'
 let TableGui = null;
 let Mp4Sections = [];
 
-function PushMp4Atom(Atom)
+function PushMp4Atoms(Atoms)
 {
-	function AtomToRow(Atom)
+	function ToRow(Atom)
 	{
 		const Row = {};
 		Row.Fourcc = Atom.Fourcc;
@@ -16,8 +16,24 @@ function PushMp4Atom(Atom)
 		return Row;
 	}
 
-	const Row = AtomToRow(Atom);
-	Mp4Sections.push(Row);
+	const Rows = Atoms.map(ToRow);
+	Mp4Sections.push(...Rows);
+	TableGui.SetValue(Mp4Sections);
+}
+
+function PushMp4Samples(Samples)
+{
+	function ToRow(Sample)
+	{
+		const Row = {};
+		Row.DecodeTimeMs = Sample.DecodeTimeMs;
+		Row.PresentationTimeMs = Sample.PresentationTimeMs;
+		Row.DataSize = Sample.DataSize;
+		return Row;
+	}
+
+	const Rows = Samples.map(ToRow);
+	Mp4Sections.push(...Rows);
 	TableGui.SetValue(Mp4Sections);
 }
 
@@ -33,16 +49,25 @@ export async function LoadMp4(Filename)
 	ClearMp4Sections();
 	
 	//	async callback for new data
-	async function ReadDecodedThread()
+	async function ReadDecodedAtomThread()
 	{
 		while ( true )
 		{
 			const Atom = await Mp4.WaitForNextAtom();
-			PushMp4Atom( Atom );
+			PushMp4Atoms( [Atom] );
 			//	detect EOF
 		}
 	}
-	const DecodeThreadPromise = ReadDecodedThread();
+	async function ReadDecodedSampleThread()
+	{
+		while ( true )
+		{
+			const Samples = await Mp4.WaitForNextSamples();
+			PushMp4Samples( Samples );
+		}
+	}
+	const DecodeAtomThreadPromise = ReadDecodedAtomThread();
+	const DecodeSampleThreadPromise = ReadDecodedSampleThread();
 	
 	//	async loading & feeding data
 	async function ReadFileThread()
@@ -53,11 +78,12 @@ export async function LoadMp4(Filename)
 		}
 		const ResolveChunks = false;
 		const FilePromise = Pop.FileSystem.LoadFileAsArrayBufferStreamAsync(Filename,ResolveChunks,OnNewChunk);
-		return await FilePromise;
+		await FilePromise;
+		Mp4.PushEndOfFile();
 	}
 	const ReadFilePromise = ReadFileThread();
 	
-	const WaitAllResult = await Promise.all( [DecodeThreadPromise,ReadFilePromise] );
+	const WaitAllResult = await Promise.all( [DecodeAtomThreadPromise,DecodeSampleThreadPromise,ReadFilePromise] );
 	Pop.Debug(`File loaded; ${WaitAllResult}`,WaitAllResult);
 }
 

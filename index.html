@@ -5,12 +5,18 @@
 body
 {
 	display:	flex;
+	flex-direction:	column;
 }
 
 table
 {
-	flex-grow:	1;
+	min-height:	5em;
 	background:	#eee;
+}
+
+#Footer
+{
+	flex-grow:	1;
 }
 
 </style>
@@ -18,6 +24,7 @@ table
 <body>
 
 <table id="Mp4Table"></table>
+<div id="Footer"></div>
 
 <script type=module>
 import * as App from './PopMp4Detective.js/App.js'
