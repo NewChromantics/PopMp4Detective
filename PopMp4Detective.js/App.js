@@ -3,7 +3,29 @@ import Pop from './PopEngineCommon/PopEngine.js'
 import {Mp4Decoder} from './PopEngineCommon/Mp4.js'
 
 let TableGui = null;
+let TreeGui = null;
 let Mp4Sections = [];
+
+
+function UpdateTreeGui(Json)
+{
+	if ( !TreeGui )
+		return;
+		
+	TreeGui.json = Json;
+	
+	//	display nodes with their fourcc
+	//	again, regex would be good here
+	let Meta = TreeGui.meta;	//	save existing meta, collapsed state etc
+	
+	for ( let Key in Json )
+	{
+		const KeyMeta = Meta[Key] || {};
+		KeyMeta.KeyAsLabel = 'Fourcc';
+		Meta[Key] = KeyMeta;
+	}
+	TreeGui.meta = Meta;
+}
 
 function PushMp4Atoms(Atoms)
 {
@@ -19,7 +41,8 @@ function PushMp4Atoms(Atoms)
 
 	const Rows = Atoms.map(ToRow);
 	Mp4Sections.push(...Rows);
-	TableGui.SetValue(Mp4Sections);
+	if ( TableGui )
+		TableGui.SetValue(Mp4Sections);
 }
 
 function PushMp4Samples(Samples)
@@ -38,7 +61,8 @@ function PushMp4Samples(Samples)
 
 	const Rows = Samples.map(ToRow);
 	Mp4Sections.push(...Rows);
-	TableGui.SetValue(Mp4Sections);
+	if ( TableGui )
+		TableGui.SetValue(Mp4Sections);
 }
 
 function ClearMp4Sections()
@@ -50,6 +74,18 @@ function ClearMp4Sections()
 export async function LoadMp4(Filename)
 {
 	const Mp4 = new Mp4Decoder();
+	
+	async function UpdateGuiThread()
+	{
+		//	todo? break out when we know there'll be no more changes
+		while ( Mp4 )
+		{
+			const NewRootAtoms = await Mp4.WaitForChange();
+			UpdateTreeGui( NewRootAtoms );
+		}
+	}
+	UpdateGuiThread();
+	
 	ClearMp4Sections();
 	
 	//	async callback for new data
@@ -95,6 +131,13 @@ export function SetTable(Name)
 {
 	TableGui = new Pop.Gui.Table(null,Name);
 	DragAndDropThread(TableGui).catch(Pop.Warning);
+}
+
+export function SetTreeView(Name)
+{
+	TreeGui = document.querySelector(`#${Name}`);
+	//TreeGui = new Pop.Gui.TreeView(null,Name);
+	//DragAndDropThread(TreeGui).catch(Pop.Warning);
 }
 
 async function DragAndDropThread(DropTargetElement)

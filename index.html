@@ -1,5 +1,6 @@
 <html>
 <head>
+<script src="./WebComponent_TreeView/TreeView.js" type="module"></script>
 <style>
 
 body
@@ -23,15 +24,17 @@ table
 </head>
 <body>
 
-<table id="Mp4Table"></table>
+<tree-view id=Mp4Table css="./WebComponent_TreeView/TreeView.css"></tree-view>
+
 <div id="Footer"></div>
 
 <script type=module>
 import * as App from './PopMp4Detective.js/App.js'
 
-App.SetTable('Mp4Table');
-//App.LoadMp4('dragandrophtml5.mp4');
-App.LoadMp4('dragandrophtml5_fragmented.mp4');
+App.SetTreeView('Mp4Table');
+App.LoadMp4('dragandrophtml5.mp4');
+//App.LoadMp4('dragandrophtml5_fragmented.mp4');
+//App.LoadMp4('Lisa.mp4');
 </script>
 
 </body>
