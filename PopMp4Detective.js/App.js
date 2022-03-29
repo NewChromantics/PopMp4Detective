@@ -4,15 +4,24 @@ import {Mp4Decoder} from './PopEngineCommon/Mp4.js'
 
 let TableGui = null;
 let TreeGui = null;
-let Mp4Sections = [];
+let Mp4Tree = {};
+let Mp4Atoms = [];
+let Mp4Samples = [];
 
 
 function UpdateTreeGui(Json)
 {
 	if ( !TreeGui )
 		return;
-		
-	TreeGui.json = Json;
+	
+	if ( Json != null )
+		Mp4Tree = Json;
+	
+	let Tree = {};
+	Tree.Atoms = Mp4Tree;
+	Tree.Samples = Mp4Samples;
+	
+	TreeGui.json = Tree;
 	
 	//	display nodes with their fourcc
 	//	again, regex would be good here
@@ -20,9 +29,10 @@ function UpdateTreeGui(Json)
 	
 	for ( let Key in Json )
 	{
-		const KeyMeta = Meta[Key] || {};
+		const MetaKey = `Atoms.${Key}`;
+		const KeyMeta = Meta[MetaKey] || {};
 		KeyMeta.KeyAsLabel = 'Fourcc';
-		Meta[Key] = KeyMeta;
+		Meta[MetaKey] = KeyMeta;
 	}
 	TreeGui.meta = Meta;
 }
@@ -40,9 +50,9 @@ function PushMp4Atoms(Atoms)
 	}
 
 	const Rows = Atoms.map(ToRow);
-	Mp4Sections.push(...Rows);
+	Mp4Atoms.push(...Rows);
 	if ( TableGui )
-		TableGui.SetValue(Mp4Sections);
+		TableGui.SetValue(Mp4Atoms.concat(Mp4Samples));
 }
 
 function PushMp4Samples(Samples)
@@ -60,14 +70,19 @@ function PushMp4Samples(Samples)
 	}
 
 	const Rows = Samples.map(ToRow);
-	Mp4Sections.push(...Rows);
+	Mp4Samples.push(...Rows);
 	if ( TableGui )
-		TableGui.SetValue(Mp4Sections);
+		TableGui.SetValue(Mp4Atoms.concat(Mp4Samples));
+		
+	UpdateTreeGui(null);
 }
 
 function ClearMp4Sections()
 {
-	Mp4Sections = [];
+	Mp4Samples = [];
+	Mp4Atoms = [];
+	Mp4Tree = null;
+	UpdateTreeGui(null);
 }
 
 
