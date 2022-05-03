@@ -4,6 +4,7 @@ import {Mp4Decoder} from './PopEngineCommon/Mp4.js'
 
 let TableGui = null;
 let TreeGui = null;
+let TreeGuiElement = null;
 let Mp4Tree = {};
 let Mp4Atoms = [];
 let Mp4Samples = [];
@@ -11,7 +12,7 @@ let Mp4Samples = [];
 
 function UpdateTreeGui(Json)
 {
-	if ( !TreeGui )
+	if ( !TreeGuiElement )
 		return;
 	
 	if ( Json != null )
@@ -21,11 +22,11 @@ function UpdateTreeGui(Json)
 	Tree.Atoms = Mp4Tree;
 	Tree.Samples = Mp4Samples;
 	
-	TreeGui.json = Tree;
+	TreeGuiElement.json = Tree;
 	
 	//	display nodes with their fourcc
 	//	again, regex would be good here
-	let Meta = TreeGui.meta;	//	save existing meta, collapsed state etc
+	let Meta = TreeGuiElement.meta;	//	save existing meta, collapsed state etc
 	
 	for ( let Key in Json )
 	{
@@ -34,7 +35,7 @@ function UpdateTreeGui(Json)
 		KeyMeta.KeyAsLabel = 'Fourcc';
 		Meta[MetaKey] = KeyMeta;
 	}
-	TreeGui.meta = Meta;
+	TreeGuiElement.meta = Meta;
 }
 
 function PushMp4Atoms(Atoms)
@@ -57,6 +58,13 @@ function PushMp4Atoms(Atoms)
 
 function PushMp4Samples(Samples)
 {
+	//	eof but refresh
+	if ( !Samples )
+	{
+		UpdateTreeGui(null);
+		return;
+	}
+	
 	function ToRow(Sample)
 	{
 		const Row = {};
@@ -119,6 +127,9 @@ export async function LoadMp4(Filename)
 		{
 			const Samples = await Mp4.WaitForNextSamples();
 			PushMp4Samples( Samples );
+			//	eof
+			if ( !Samples )
+				break;
 		}
 	}
 	const DecodeAtomThreadPromise = ReadDecodedAtomThread();
@@ -150,9 +161,9 @@ export function SetTable(Name)
 
 export function SetTreeView(Name)
 {
-	TreeGui = document.querySelector(`#${Name}`);
-	//TreeGui = new Pop.Gui.TreeView(null,Name);
-	//DragAndDropThread(TreeGui).catch(Pop.Warning);
+	TreeGuiElement = document.querySelector(`#${Name}`);
+	TreeGui = new Pop.Gui.Tree(TreeGuiElement,Name);
+	DragAndDropThread(TreeGui).catch(Pop.Warning);
 }
 
 async function DragAndDropThread(DropTargetElement)
